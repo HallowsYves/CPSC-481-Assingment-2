@@ -11,3 +11,9 @@ csv = csv[new_column_order]
 
 # Remove missing values for Quality of schools and Community Trust in local Police
 csv = csv.dropna(axis='index')
+
+# Pearson Correlation for feature correlation (will be covered in class this week)
+correlations = csv.corr(method='pearson')
+
+# Export to new CSV
+csv.to_csv('processed.csv', index=False)
