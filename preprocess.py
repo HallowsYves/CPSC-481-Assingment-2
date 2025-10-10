@@ -1,19 +1,37 @@
 import pandas as pd
 
-# Load the CSV
-csv = pd.read_csv("HappinessData-1.csv")
+csv = pd.read_csv(
+    "HappinessData-1.csv",
+    na_values=["NA", "N/A", "", " "],
+    keep_default_na=True
+)
 
 # Move the class label column to be the last column in the csv file.
-col_to_move = 'Unhappy/Happy'
-other_cols = [col for col in csv.columns if col != col_to_move]
-new_column_order = other_cols + [col_to_move]
-csv = csv[new_column_order]
+target_column = 'Unhappy/Happy'
+cols = [col for col in csv.columns if col != target_column]
 
-# Remove missing values for Quality of schools and Community Trust in local Police
-csv = csv.dropna(axis='index')
+for col in cols:
+    csv[col] = pd.to_numeric(csv[col], errors="coerce")
+csv[target_column] = pd.to_numeric(csv[target_column], errors='coerce').astype("Int64")
 
-# Pearson Correlation for feature correlation (will be covered in class this week)
-correlations = csv.corr(method='pearson')
+# Drop missing values
+cols_with_missing = ["Quality of schools", "Community trust in local police"]
+existing = [col for col in cols_with_missing if col in csv.columns]
+
+if existing:
+    csv = csv.dropna(subset=existing)
+else:
+    csv = csv.dropna(subset=cols)
+
+csv[cols] = csv[cols].astype(float)
+csv[target_column] = csv[target_column].astype(int)
+
+# -- Correlations -- 
+feature_correlation = csv[cols].corr(method="pearson")
+target_correlations = csv[cols].corrwith(csv[target_column].sort_values(ascending=False))
+print("Top feature target correlations: ")
+print(target_correlations.head(10))
 
 # Export to new CSV
 csv.to_csv('processed.csv', index=False)
+print("Processed Dataset, saved as 'process.csv'. ")
